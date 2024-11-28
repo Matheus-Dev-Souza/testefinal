@@ -1,0 +1,61 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: compass159
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: internbot
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: interbot
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  environment:
+    TELEGRAM_TOKEN: ${env:TELEGRAM_TOKEN}
+    BOT_ID: ${env:BOT_ID}
+    BOT_ALIAS_ID: ${env:BOT_ALIAS_ID}
+    LOCALE_ID: ${env:LOCALE_ID}
+    BUCKET_NAME: ${env:BUCKET_NAME}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "lex:RecognizeText"
+        - "rekognition:DetectLabels"
+        - "rekognition:DetectFaces"
+        - "transcribe:StartTranscriptionJob"
+        - "s3:*"
+        - "dynamodb:*"
+      Resource: "*"
+
+functions:
+  webhookHandler:
+    handler: src/handlers/webhook_handler.handle_telegram_event
+    events:
+      - http:
+          path: telegram-webhook
+          method: post
+
+  lexFunction:
+    handler: handlers/lex_handler.handle
+    events:
+      - http:
+          path: lex
+          method: post
+
+  rekognitionFunction:
+    handler: handlers/rekognition_handler.handle
+    events:
+      - http:
+          path: rekognition
+          method: post
+
+  transcribeFunction:
+    handler: handlers/transcribe_handler.handle
+    events:
+      - http:
+          path: transcribe
+          method: post
+
+
+plugins:
+  - serverless-offline
+
